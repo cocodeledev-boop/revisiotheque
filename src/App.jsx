@@ -10,6 +10,7 @@ const ETABLISSEMENTS = {
   "Lycée Corot": {
     emoji: "🏫",
     couleur: "#4F7FFF",
+    motDePasse: "59500",
     classes: ["Seconde 4"],
     matieres: [
       { label: "Anglais",         color: "#5BB8F5", bg: "#EAF6FE" },
@@ -32,6 +33,7 @@ const ETABLISSEMENTS = {
   "Lycée Guy Mollet": {
     emoji: "🏛️",
     couleur: "#E67E22",
+    motDePasse: "62000",
     classes: ["Seconde Iris"],
     matieres: [
       { label: "Anglais",         color: "#5BB8F5", bg: "#EAF6FE" },
@@ -90,9 +92,31 @@ document.head.appendChild(styleTag);
 
 // ── ÉCRAN DE SÉLECTION ───────────────────────────────────────────────────────
 function SelectionScreen({ onSelect }) {
-  const [etape, setEtape] = useState(1); // 1 = choisir établissement, 2 = choisir classe
+  const [etape, setEtape]             = useState(1); // 1=établissement 2=mot de passe 3=classe
   const [etablissement, setEtablissement] = useState(null);
+  const [mdp, setMdp]                 = useState("");
+  const [erreur, setErreur]           = useState(false);
 
+  const config = etablissement ? ETABLISSEMENTS[etablissement] : null;
+
+  const choisirEtab = (nom) => {
+    setEtablissement(nom);
+    setMdp("");
+    setErreur(false);
+    setEtape(2);
+  };
+
+  const validerMdp = () => {
+    if (mdp === config.motDePasse) {
+      setErreur(false);
+      setEtape(3);
+    } else {
+      setErreur(true);
+      setMdp("");
+    }
+  };
+
+  // Étape 1 — choisir l'établissement
   if (etape === 1) {
     return (
       <div style={sel.root}>
@@ -101,10 +125,10 @@ function SelectionScreen({ onSelect }) {
           <div style={sel.title}>RévisoThèque</div>
           <div style={sel.subtitle}>Choisissez votre établissement</div>
           <div style={sel.btnGroup}>
-            {Object.entries(ETABLISSEMENTS).map(([nom, config]) => (
-              <button key={nom} style={{ ...sel.etabBtn, borderColor: config.couleur, color: config.couleur }}
-                onClick={() => { setEtablissement(nom); setEtape(2); }}>
-                <span style={{ fontSize: 28 }}>{config.emoji}</span>
+            {Object.entries(ETABLISSEMENTS).map(([nom, cfg]) => (
+              <button key={nom} style={{ ...sel.etabBtn, borderColor: cfg.couleur, color: cfg.couleur }}
+                onClick={() => choisirEtab(nom)}>
+                <span style={{ fontSize: 28 }}>{cfg.emoji}</span>
                 <span style={{ fontWeight: 700, fontSize: 16 }}>{nom}</span>
               </button>
             ))}
@@ -114,7 +138,38 @@ function SelectionScreen({ onSelect }) {
     );
   }
 
-  const config = ETABLISSEMENTS[etablissement];
+  // Étape 2 — mot de passe
+  if (etape === 2) {
+    return (
+      <div style={sel.root}>
+        <div style={sel.card}>
+          <div style={{ fontSize: 52, marginBottom: 12 }}>{config.emoji}</div>
+          <div style={sel.title}>{etablissement}</div>
+          <div style={sel.subtitle}>Entrez le mot de passe pour accéder</div>
+
+          <input
+            style={{ ...sel.mdpInput, borderColor: erreur ? "#E74C3C" : "#E0E0E0" }}
+            type="password"
+            placeholder="Mot de passe…"
+            value={mdp}
+            onChange={(e) => { setMdp(e.target.value); setErreur(false); }}
+            onKeyDown={(e) => e.key === "Enter" && validerMdp()}
+            autoFocus
+          />
+          {erreur && (
+            <div style={sel.erreur}>❌ Mot de passe incorrect</div>
+          )}
+
+          <button style={{ ...sel.classeBtn, background: config.couleur, marginTop: 8 }} onClick={validerMdp}>
+            Accéder →
+          </button>
+          <button style={sel.backBtn} onClick={() => setEtape(1)}>← Changer d'établissement</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Étape 3 — choisir la classe
   return (
     <div style={sel.root}>
       <div style={sel.card}>
@@ -144,6 +199,8 @@ const sel = {
   btnGroup: { display: "flex", flexDirection: "column", gap: 14 },
   etabBtn:  { background: "#FFF", border: "2px solid", borderRadius: 12, padding: "18px 24px", cursor: "pointer", display: "flex", alignItems: "center", gap: 16, fontFamily: "Georgia, serif", transition: "all 0.15s" },
   classeBtn:{ color: "#FFF", border: "none", borderRadius: 12, padding: "16px 24px", cursor: "pointer", fontSize: 16, fontWeight: 700, fontFamily: "Georgia, serif" },
+  mdpInput: { width: "100%", border: "2px solid", borderRadius: 10, padding: "12px 16px", fontSize: 18, outline: "none", boxSizing: "border-box", fontFamily: "Georgia, serif", textAlign: "center", letterSpacing: 4, marginBottom: 8 },
+  erreur:   { color: "#E74C3C", fontSize: 13, fontWeight: 600, marginBottom: 8 },
   backBtn:  { marginTop: 20, background: "none", border: "none", color: "#999", cursor: "pointer", fontSize: 13, fontFamily: "Georgia, serif" },
 };
 
