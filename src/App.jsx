@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  collection, addDoc, getDocs, query, orderBy, serverTimestamp,
+  collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, serverTimestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -25,7 +25,6 @@ const randomAvatar = (name) => {
   return { initials, hue };
 };
 
-// Compresse une image en base64
 const compressImage = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -51,6 +50,11 @@ const compressImage = (file) =>
     reader.readAsDataURL(file);
   });
 
+// Injection du CSS pour le spinner
+const styleTag = document.createElement("style");
+styleTag.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
+document.head.appendChild(styleTag);
+
 export default function App() {
   const [fiches, setFiches]             = useState([]);
   const [loading, setLoading]           = useState(true);
@@ -63,19 +67,21 @@ export default function App() {
   const [errorMsg, setErrorMsg]         = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [imageBase64, setImageBase64]   = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null); // id de la fiche à supprimer
   const fileInputRef = useRef();
   const [form, setForm] = useState({
     auteur: "", matiere: "Mathématiques", titre: "", contenu: "",
   });
 
+  // ── Charger les fiches ───────────────────────────────────────────────────
   const loadFiches = async () => {
     try {
       const q = query(collection(db, "fiches"), orderBy("createdAt", "desc"));
       const snap = await getDocs(q);
       setFiches(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     } catch (e) {
-      console.error("Erreur chargement :", e);
-      setErrorMsg("Impossible de charger les fiches. Vérifie les règles Firebase.");
+      console.error(e);
+      setErrorMsg("Impossible de charger les fiches. Vérifie Firebase.");
     } finally {
       setLoading(false);
     }
@@ -83,6 +89,7 @@ export default function App() {
 
   useEffect(() => { loadFiches(); }, []);
 
+  // ── Image ────────────────────────────────────────────────────────────────
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -101,6 +108,7 @@ export default function App() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // ── Publier ──────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!form.auteur.trim() || !form.titre.trim() || !form.contenu.trim()) return;
     setSaving(true);
@@ -116,10 +124,23 @@ export default function App() {
       setSuccessMsg(true);
       setTimeout(() => setSuccessMsg(false), 3000);
     } catch (e) {
-      console.error("Erreur :", e);
-      setErrorMsg("Erreur de publication. Va dans Firebase → Firestore → Règles et autorise les lectures/écritures.");
+      console.error(e);
+      setErrorMsg("Erreur de publication. Vérifie les règles Firebase (Firestore → Règles).");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // ── Supprimer ────────────────────────────────────────────────────────────
+  const handleDelete = async (id) => {
+    try {
+      await deleteDoc(doc(db, "fiches", id));
+      setFiches((prev) => prev.filter((f) => f.id !== id));
+      setConfirmDelete(null);
+      if (expandedId === id) setExpandedId(null);
+    } catch (e) {
+      console.error(e);
+      alert("Impossible de supprimer. Vérifie les règles Firebase.");
     }
   };
 
@@ -143,7 +164,7 @@ export default function App() {
   return (
     <div style={s.root}>
 
-      {/* HEADER */}
+      {/* ── HEADER ── */}
       <header style={s.header}>
         <div style={s.headerInner}>
           <div style={s.logo}>
@@ -159,9 +180,27 @@ export default function App() {
         </div>
       </header>
 
+      {/* ── TOAST ── */}
       {successMsg && <div style={s.toast}>✅ Fiche publiée avec succès !</div>}
 
-      {/* MODAL */}
+      {/* ── MODAL CONFIRMATION SUPPRESSION ── */}
+      {confirmDelete && (
+        <div style={s.overlay} onClick={() => setConfirmDelete(null)}>
+          <div style={{ ...s.modal, maxWidth: 380, padding: "28px 28px" }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: 40, textAlign: "center", marginBottom: 12 }}>🗑️</div>
+            <div style={{ fontWeight: 700, fontSize: 17, textAlign: "center", marginBottom: 8 }}>Supprimer cette fiche ?</div>
+            <div style={{ color: "#777", fontSize: 13, textAlign: "center", marginBottom: 24 }}>Cette action est irréversible.</div>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+              <button style={s.cancelBtn} onClick={() => setConfirmDelete(null)}>Annuler</button>
+              <button style={{ ...s.submitBtn, background: "#C0392B" }} onClick={() => handleDelete(confirmDelete)}>
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL FORMULAIRE ── */}
       {showForm && (
         <div style={s.overlay} onClick={(e) => e.target === e.currentTarget && setShowForm(false)}>
           <div style={s.modal}>
@@ -191,16 +230,17 @@ export default function App() {
               placeholder="Cours, définitions, formules, exemples…"
               value={form.contenu} onChange={(e) => setForm({ ...form, contenu: e.target.value })} />
 
+            {/* IMAGE */}
             <label style={s.label}>Image (optionnel)</label>
             {imagePreview ? (
-              <div style={s.imagePreviewBox}>
-                <img src={imagePreview} alt="preview" style={s.imagePreview} />
-                <button style={s.removeImageBtn} onClick={removeImage}>✕ Supprimer l'image</button>
+              <div style={{ marginBottom: 18 }}>
+                <img src={imagePreview} alt="preview" style={{ width: "100%", borderRadius: 8, maxHeight: 200, objectFit: "cover", display: "block" }} />
+                <button style={{ ...s.cancelBtn, marginTop: 8, fontSize: 13 }} onClick={removeImage}>✕ Supprimer l'image</button>
               </div>
             ) : (
               <div style={s.imageUploadArea} onClick={() => fileInputRef.current.click()}>
-                <span style={{ fontSize: 28 }}>🖼️</span>
-                <span style={{ fontSize: 13, color: "#777" }}>Clique pour ajouter une image</span>
+                <span style={{ fontSize: 32 }}>🖼️</span>
+                <span style={{ fontSize: 13, color: "#555", fontWeight: 600 }}>Clique pour ajouter une image</span>
                 <span style={{ fontSize: 11, color: "#AAA" }}>JPG, PNG — max 5 Mo</span>
               </div>
             )}
@@ -220,7 +260,7 @@ export default function App() {
         </div>
       )}
 
-      {/* FILTRES */}
+      {/* ── FILTRES ── */}
       <div style={s.filtersBar}>
         <div style={s.filtersInner}>
           <input style={s.searchInput} placeholder="🔍 Rechercher une fiche…"
@@ -241,7 +281,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* MAIN */}
+      {/* ── MAIN ── */}
       <main style={s.main}>
         {loading ? (
           <div style={s.empty}><div style={{ fontSize: 56 }}>⏳</div><div>Chargement des fiches…</div></div>
@@ -270,26 +310,41 @@ export default function App() {
                 const expanded = expandedId === fiche.id;
                 const preview  = (fiche.contenu || "").slice(0, 200);
                 return (
-                  <div key={fiche.id} style={{ ...s.card, borderTop: `4px solid ${sub.color}` }}
-                    onClick={() => setExpandedId(expanded ? null : fiche.id)}>
+                  <div key={fiche.id} style={{ ...s.card, borderTop: `4px solid ${sub.color}` }}>
+
+                    {/* En-tête carte */}
                     <div style={s.cardTop}>
                       <span style={{ ...s.badge, background: sub.bg, color: sub.color }}>{fiche.matiere}</span>
-                      <span style={s.cardDate}>{formatDate(fiche.createdAt)}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={s.cardDate}>{formatDate(fiche.createdAt)}</span>
+                        <button
+                          style={s.deleteBtn}
+                          onClick={(e) => { e.stopPropagation(); setConfirmDelete(fiche.id); }}
+                          title="Supprimer cette fiche">
+                          🗑️
+                        </button>
+                      </div>
                     </div>
-                    <div style={s.cardTitle}>{fiche.titre}</div>
-                    {fiche.image && (
-                      <img src={fiche.image} alt="illustration"
-                        style={{ width: "100%", borderRadius: 8, maxHeight: expanded ? "none" : 160, objectFit: "cover" }} />
-                    )}
-                    <div style={s.cardContent}>
-                      {expanded ? fiche.contenu : preview}
-                      {!expanded && (fiche.contenu || "").length > 200 && (
-                        <span style={{ color: sub.color, fontWeight: 600 }}> … voir plus</span>
+
+                    {/* Contenu cliquable */}
+                    <div onClick={() => setExpandedId(expanded ? null : fiche.id)} style={{ cursor: "pointer" }}>
+                      <div style={s.cardTitle}>{fiche.titre}</div>
+                      {fiche.image && (
+                        <img src={fiche.image} alt="illustration"
+                          style={{ width: "100%", borderRadius: 8, maxHeight: expanded ? "none" : 160, objectFit: "cover", marginBottom: 8 }} />
+                      )}
+                      <div style={s.cardContent}>
+                        {expanded ? fiche.contenu : preview}
+                        {!expanded && (fiche.contenu || "").length > 200 && (
+                          <span style={{ color: sub.color, fontWeight: 600 }}> … voir plus</span>
+                        )}
+                      </div>
+                      {expanded && (fiche.contenu || "").length > 200 && (
+                        <div style={{ color: sub.color, fontSize: 12, fontWeight: 700, textAlign: "center", marginTop: 4 }}>▲ Réduire</div>
                       )}
                     </div>
-                    {expanded && (fiche.contenu || "").length > 200 && (
-                      <div style={{ color: sub.color, fontSize: 12, fontWeight: 700, textAlign: "center" }}>▲ Réduire</div>
-                    )}
+
+                    {/* Footer auteur */}
                     <div style={s.cardFooter}>
                       <div style={{ ...s.avatar, background: `hsl(${av.hue},65%,55%)` }}>{av.initials}</div>
                       <span style={s.authorName}>{fiche.auteur}</span>
@@ -325,10 +380,7 @@ const s = {
   errorBox:       { background: "#FEECEB", border: "1px solid #C0392B", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#C0392B", marginBottom: 16 },
   label:          { display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: "#444", textTransform: "uppercase", letterSpacing: "0.5px" },
   input:          { width: "100%", border: "2px solid #E8E8E8", borderRadius: 8, padding: "10px 14px", fontSize: 14, outline: "none", marginBottom: 18, boxSizing: "border-box", background: "#FAFAFA", fontFamily: "Georgia, serif", color: "#1A1A1A" },
-  imageUploadArea:{ border: "2px dashed #DDD", borderRadius: 8, padding: "24px 16px", marginBottom: 18, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: "#FAFAFA" },
-  imagePreviewBox:{ marginBottom: 18 },
-  imagePreview:   { width: "100%", borderRadius: 8, maxHeight: 200, objectFit: "cover", display: "block" },
-  removeImageBtn: { marginTop: 8, background: "#EEE", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 13, fontFamily: "Georgia, serif" },
+  imageUploadArea:{ border: "2px dashed #CCC", borderRadius: 8, padding: "28px 16px", marginBottom: 18, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, background: "#FAFAFA" },
   modalFooter:    { display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 4 },
   cancelBtn:      { background: "#EEE", border: "none", borderRadius: 8, padding: "10px 20px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 14 },
   submitBtn:      { background: "#1A1A1A", color: "#FFF", border: "none", borderRadius: 8, padding: "10px 22px", cursor: "pointer", fontWeight: 700, fontFamily: "Georgia, serif", fontSize: 14, display: "flex", alignItems: "center" },
@@ -341,10 +393,11 @@ const s = {
   main:           { maxWidth: 1100, margin: "0 auto", padding: "28px 24px 60px" },
   count:          { fontSize: 13, color: "#888", marginBottom: 20, fontStyle: "italic" },
   grid:           { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 },
-  card:           { background: "#FFF", borderRadius: 12, padding: 20, cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", gap: 10 },
+  card:           { background: "#FFF", borderRadius: 12, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", gap: 10 },
   cardTop:        { display: "flex", justifyContent: "space-between", alignItems: "center" },
   badge:          { borderRadius: 6, padding: "3px 10px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" },
   cardDate:       { fontSize: 11, color: "#AAA", fontStyle: "italic" },
+  deleteBtn:      { background: "none", border: "none", cursor: "pointer", fontSize: 15, padding: "2px 4px", borderRadius: 4, opacity: 0.5 },
   cardTitle:      { fontSize: 16, fontWeight: 700, lineHeight: 1.3 },
   cardContent:    { fontSize: 13, color: "#555", lineHeight: 1.7, whiteSpace: "pre-wrap", flexGrow: 1 },
   cardFooter:     { display: "flex", alignItems: "center", gap: 10, borderTop: "1px solid #F0F0F0", paddingTop: 12, marginTop: 4 },
@@ -353,7 +406,3 @@ const s = {
   empty:          { textAlign: "center", padding: "80px 20px", color: "#777", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 },
   footer:         { textAlign: "center", padding: 20, color: "#BBB", fontSize: 12, borderTop: "1px solid #E8E8E8", background: "#FFF" },
 };
-
-const styleTag = document.createElement("style");
-styleTag.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
-document.head.appendChild(styleTag);
