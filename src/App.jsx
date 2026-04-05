@@ -5,6 +5,9 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 
+// ── MOT DE PASSE ADMIN (change-le par ce que tu veux) ───────────────────────
+const ADMIN_PASSWORD = "2104";
+
 // ── CONFIG ÉTABLISSEMENTS ────────────────────────────────────────────────────
 const ETABLISSEMENTS = {
   "Lycée Corot": {
@@ -219,7 +222,9 @@ export default function App() {
   const [errorMsg, setErrorMsg]           = useState("");
   const [imagePreview, setImagePreview]   = useState(null);
   const [imageBase64, setImageBase64]     = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null); // { id, auteur }
+  const [deleteInput, setDeleteInput]     = useState("");
+  const [deleteErreur, setDeleteErreur]   = useState(false);
   const fileInputRef = useRef();
 
   const config  = etablissement ? ETABLISSEMENTS[etablissement] : null;
@@ -308,13 +313,27 @@ export default function App() {
   };
 
   // ── Supprimer ────────────────────────────────────────────────────────────
-  const handleDelete = async (id) => {
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    if (deleteInput !== ADMIN_PASSWORD) {
+      setDeleteErreur(true);
+      setDeleteInput("");
+      return;
+    }
     try {
-      await deleteDoc(doc(db, "fiches", id));
-      setFiches((prev) => prev.filter((f) => f.id !== id));
+      await deleteDoc(doc(db, "fiches", confirmDelete.id));
+      setFiches((prev) => prev.filter((f) => f.id !== confirmDelete.id));
+      if (expandedId === confirmDelete.id) setExpandedId(null);
       setConfirmDelete(null);
-      if (expandedId === id) setExpandedId(null);
+      setDeleteInput("");
+      setDeleteErreur(false);
     } catch { alert("Impossible de supprimer. Vérifie les règles Firebase."); }
+  };
+
+  const ouvrirSuppression = (fiche) => {
+    setConfirmDelete({ id: fiche.id, auteur: fiche.auteur });
+    setDeleteInput("");
+    setDeleteErreur(false);
   };
 
   // ── Si pas encore de sélection → écran de bienvenue ─────────────────────
@@ -363,16 +382,26 @@ export default function App() {
 
       {successMsg && <div style={s.toast}>✅ Fiche publiée avec succès !</div>}
 
-      {/* ── MODAL CONFIRMATION SUPPRESSION ── */}
+      {/* ── MODAL SUPPRESSION ADMIN ── */}
       {confirmDelete && (
-        <div style={s.overlay} onClick={() => setConfirmDelete(null)}>
-          <div style={{ ...s.modal, maxWidth: 360, padding: "28px" }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ fontSize: 40, textAlign: "center", marginBottom: 12 }}>🗑️</div>
-            <div style={{ fontWeight: 700, fontSize: 17, textAlign: "center", marginBottom: 8 }}>Supprimer cette fiche ?</div>
-            <div style={{ color: "#777", fontSize: 13, textAlign: "center", marginBottom: 24 }}>Cette action est irréversible.</div>
+        <div style={s.overlay} onClick={() => { setConfirmDelete(null); setDeleteInput(""); setDeleteErreur(false); }}>
+          <div style={{ ...s.modal, maxWidth: 380, padding: "32px 28px" }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: 40, textAlign: "center", marginBottom: 12 }}>🔐</div>
+            <div style={{ fontWeight: 700, fontSize: 17, textAlign: "center", marginBottom: 6 }}>Suppression réservée à l'admin</div>
+            <div style={{ color: "#777", fontSize: 13, textAlign: "center", marginBottom: 24 }}>Entre le mot de passe administrateur pour supprimer cette fiche.</div>
+            <input
+              style={{ ...s.input, textAlign: "center", letterSpacing: 3, borderColor: deleteErreur ? "#E74C3C" : "#E8E8E8" }}
+              type="password"
+              placeholder="Mot de passe admin…"
+              value={deleteInput}
+              autoFocus
+              onChange={(e) => { setDeleteInput(e.target.value); setDeleteErreur(false); }}
+              onKeyDown={(e) => e.key === "Enter" && handleDelete()}
+            />
+            {deleteErreur && <div style={{ color: "#E74C3C", fontSize: 13, textAlign: "center", marginTop: -12, marginBottom: 12, fontWeight: 600 }}>❌ Mot de passe incorrect</div>}
             <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-              <button style={s.cancelBtn} onClick={() => setConfirmDelete(null)}>Annuler</button>
-              <button style={{ ...s.submitBtn, background: "#C0392B" }} onClick={() => handleDelete(confirmDelete)}>Supprimer</button>
+              <button style={s.cancelBtn} onClick={() => { setConfirmDelete(null); setDeleteInput(""); setDeleteErreur(false); }}>Annuler</button>
+              <button style={{ ...s.submitBtn, background: "#C0392B" }} onClick={handleDelete}>🗑️ Supprimer</button>
             </div>
           </div>
         </div>
@@ -486,7 +515,15 @@ export default function App() {
                 const expanded = expandedId === fiche.id;
                 const preview  = (fiche.contenu || "").slice(0, 200);
                 return (
-                  <div key={fiche.id} style={{ ...s.card, borderTop: `4px solid ${sub.color}` }}>
+                  <div key={fiche.id} style={{ ...s.card, borderTop: `4px solid ${sub.color}`, position: "relative" }}>
+
+                    {/* Bouton supprimer discret */}
+                    <button
+                      style={s.deleteBtnDiscret}
+                      onClick={(e) => { e.stopPropagation(); ouvrirSuppression(fiche); }}
+                      title="Supprimer">
+                      🗑️
+                    </button>
                     <div style={s.cardTop}>
                       <span style={{ ...s.badge, background: sub.bg, color: sub.color }}>{fiche.matiere}</span>
                       <span style={s.cardDate}>{formatDate(fiche.createdAt)}</span>
@@ -511,9 +548,6 @@ export default function App() {
                       <div style={{ ...s.avatar, background: `hsl(${av.hue},65%,55%)` }}>{av.initials}</div>
                       <span style={s.authorName}>{fiche.auteur}</span>
                     </div>
-                    <button style={s.deleteBtnBig} onClick={(e) => { e.stopPropagation(); setConfirmDelete(fiche.id); }}>
-                      🗑️ Supprimer cette fiche
-                    </button>
                   </div>
                 );
               })}
@@ -568,7 +602,7 @@ const s = {
   cardFooter:     { display: "flex", alignItems: "center", gap: 10, borderTop: "1px solid #F0F0F0", paddingTop: 12, marginTop: 4 },
   avatar:         { width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#FFF", flexShrink: 0 },
   authorName:     { fontSize: 13, fontWeight: 600, color: "#333" },
-  deleteBtnBig:   { width: "100%", background: "#FFF0F0", border: "1.5px solid #FFCCCC", borderRadius: 8, padding: "10px", cursor: "pointer", fontSize: 13, fontWeight: 700, color: "#C0392B", fontFamily: "Georgia, serif", marginTop: 4 },
+  deleteBtnDiscret: { position: "absolute", top: 10, right: 10, background: "none", border: "none", cursor: "pointer", fontSize: 14, opacity: 0.25, padding: "4px", borderRadius: 6, lineHeight: 1 },
   empty:          { textAlign: "center", padding: "80px 20px", color: "#777", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 },
   footer:         { textAlign: "center", padding: 20, color: "#BBB", fontSize: 12, borderTop: "1px solid #E8E8E8", background: "#FFF" },
 };
