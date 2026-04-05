@@ -5,15 +5,21 @@ import {
 import { db } from "./firebase";
 
 const SUBJECTS = [
-  { label: "Mathématiques",  color: "#4F7FFF", bg: "#EEF3FF" },
-  { label: "Français",        color: "#E05A2B", bg: "#FFF0EB" },
-  { label: "Histoire-Géo",    color: "#2BAE66", bg: "#EBFAF2" },
-  { label: "Physique-Chimie", color: "#9B3FCC", bg: "#F5EBFF" },
-  { label: "SVT",             color: "#1EA8A1", bg: "#EBFAFA" },
-  { label: "Anglais",         color: "#D4A017", bg: "#FFF9E6" },
-  { label: "Philosophie",     color: "#C0392B", bg: "#FEECEB" },
-  { label: "Économie",        color: "#2874A6", bg: "#EBF4FD" },
-  { label: "Autre",           color: "#7F8C8D", bg: "#F2F3F3" },
+  { label: "Anglais",         color: "#5BB8F5", bg: "#EAF6FE" },
+  { label: "Histoire-Géo",    color: "#27AE60", bg: "#E9F7EF" },
+  { label: "Mathématiques",   color: "#E74C3C", bg: "#FDEDEC" },
+  { label: "Français",        color: "#1A4F8A", bg: "#E8EEF7" },
+  { label: "Italien",         color: "#F48FB1", bg: "#FDE8F0" },
+  { label: "Espagnol",        color: "#8E44AD", bg: "#F4ECF7" },
+  { label: "Allemand",        color: "#7B2D3E", bg: "#F5E8EB" },
+  { label: "SES",             color: "#D4AC0D", bg: "#FEF9E7" },
+  { label: "SNT",             color: "#E67E22", bg: "#FEF0E6" },
+  { label: "Musique",         color: "#7F8C8D", bg: "#F2F3F3" },
+  { label: "Danse",           color: "#95A5A6", bg: "#F4F6F6" },
+  { label: "Physique-Chimie", color: "#7D5A45", bg: "#F3EAE4" },
+  { label: "SVT",             color: "#1ABC9C", bg: "#E8F8F5" },
+  { label: "EMC",             color: "#2ECC71", bg: "#E9F7EF" },
+  { label: "Autre",           color: "#AAB7B8", bg: "#F2F3F3" },
 ];
 
 const getSubject = (label) =>
@@ -315,15 +321,7 @@ export default function App() {
                     {/* En-tête carte */}
                     <div style={s.cardTop}>
                       <span style={{ ...s.badge, background: sub.bg, color: sub.color }}>{fiche.matiere}</span>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={s.cardDate}>{formatDate(fiche.createdAt)}</span>
-                        <button
-                          style={s.deleteBtn}
-                          onClick={(e) => { e.stopPropagation(); setConfirmDelete(fiche.id); }}
-                          title="Supprimer cette fiche">
-                          🗑️
-                        </button>
-                      </div>
+                      <span style={s.cardDate}>{formatDate(fiche.createdAt)}</span>
                     </div>
 
                     {/* Contenu cliquable */}
@@ -344,11 +342,18 @@ export default function App() {
                       )}
                     </div>
 
-                    {/* Footer auteur */}
+                    {/* Footer auteur + supprimer */}
                     <div style={s.cardFooter}>
                       <div style={{ ...s.avatar, background: `hsl(${av.hue},65%,55%)` }}>{av.initials}</div>
                       <span style={s.authorName}>{fiche.auteur}</span>
                     </div>
+
+                    {/* Bouton supprimer */}
+                    <button
+                      style={s.deleteBtnBig}
+                      onClick={(e) => { e.stopPropagation(); setConfirmDelete(fiche.id); }}>
+                      🗑️ Supprimer cette fiche
+                    </button>
                   </div>
                 );
               })}
@@ -397,7 +402,7 @@ const s = {
   cardTop:        { display: "flex", justifyContent: "space-between", alignItems: "center" },
   badge:          { borderRadius: 6, padding: "3px 10px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" },
   cardDate:       { fontSize: 11, color: "#AAA", fontStyle: "italic" },
-  deleteBtn:      { background: "none", border: "none", cursor: "pointer", fontSize: 15, padding: "2px 4px", borderRadius: 4, opacity: 0.5 },
+  deleteBtnBig:   { width: "100%", background: "#FFF0F0", border: "1.5px solid #FFCCCC", borderRadius: 8, padding: "10px", cursor: "pointer", fontSize: 13, fontWeight: 700, color: "#C0392B", fontFamily: "Georgia, serif", marginTop: 4 },
   cardTitle:      { fontSize: 16, fontWeight: 700, lineHeight: 1.3 },
   cardContent:    { fontSize: 13, color: "#555", lineHeight: 1.7, whiteSpace: "pre-wrap", flexGrow: 1 },
   cardFooter:     { display: "flex", alignItems: "center", gap: 10, borderTop: "1px solid #F0F0F0", paddingTop: 12, marginTop: 4 },
