@@ -295,6 +295,9 @@ export default function App() {
   const [etablissement, setEtablissement] = useState(() => localStorage.getItem("etab") || null);
   const [classe, setClasse]               = useState(() => localStorage.getItem("classe") || null);
   const [fiches, setFiches]               = useState([]);
+  const [favoris, setFavoris] = useState(() => {
+  return JSON.parse(localStorage.getItem("favoris")) || [];
+});
   const [loading, setLoading]             = useState(true);
   const [showForm, setShowForm]           = useState(false);
   const [filterSubject, setFilter]        = useState("Toutes");
@@ -607,6 +610,12 @@ export default function App() {
                       title="Supprimer">
                       🗑️
                     </button>
+                    <button
+  style={s.favoriteBtn}
+  onClick={() => toggleFavori(fiche.id)}
+>
+  {favoris.includes(fiche.id) ? "⭐ Favori" : "☆ Ajouter aux favoris"}
+</button>
                     <div style={s.cardTop}>
                       <span style={{ ...s.badge, background: sub.bg, color: sub.color }}>{fiche.matiere}</span>
                       <span style={s.cardDate}>{formatDate(fiche.createdAt)}</span>
