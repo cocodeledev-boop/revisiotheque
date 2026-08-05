@@ -10,29 +10,38 @@ const ADMIN_PASSWORD = "2104";
 
 // ── CONFIG ÉTABLISSEMENTS ────────────────────────────────────────────────────
 const ETABLISSEMENTS = {
-  "Lycée Corot": {
-    emoji: "🏫",
-    couleur: "#4F7FFF",
-    motDePasse: "59500",
-    classes: ["S2TMD"],
-    matieres: [
-      { label: "Anglais",         color: "#5BB8F5", bg: "#EAF6FE" },
-      { label: "Histoire-Géo",    color: "#27AE60", bg: "#E9F7EF" },
-      { label: "Mathématiques",   color: "#E74C3C", bg: "#FDEDEC" },
-      { label: "Français",        color: "#1A4F8A", bg: "#E8EEF7" },
-      { label: "Italien",         color: "#F48FB1", bg: "#FDE8F0" },
-      { label: "Espagnol",        color: "#8E44AD", bg: "#F4ECF7" },
-      { label: "Allemand",        color: "#7B2D3E", bg: "#F5E8EB" },
-      { label: "SES",             color: "#D4AC0D", bg: "#FEF9E7" },
-      { label: "SNT",             color: "#E67E22", bg: "#FEF0E6" },
-      { label: "Musique",         color: "#7F8C8D", bg: "#F2F3F3" },
-      { label: "Danse",           color: "#95A5A6", bg: "#F4F6F6" },
-      { label: "Physique-Chimie", color: "#7D5A45", bg: "#F3EAE4" },
-      { label: "SVT",             color: "#1ABC9C", bg: "#E8F8F5" },
-      { label: "EMC",             color: "#2ECC71", bg: "#E9F7EF" },
-      { label: "Autre",           color: "#AAB7B8", bg: "#F2F3F3" },
-    ],
-  },
+"Lycée Corot": {
+  emoji: "🏫",
+  couleur: "#4F7FFF",
+  motDePasse: "59500",
+  classes: [
+    {
+      nom: "Seconde 4",
+      motDePasse: "mdpseconde4"
+    },
+    {
+      nom: "S2TMD",
+      motDePasse: "mdps2tmd"
+    }
+  ],
+  matieres: [
+    { label: "Anglais",         color: "#5BB8F5", bg: "#EAF6FE" },
+    { label: "Histoire-Géo",    color: "#27AE60", bg: "#E9F7EF" },
+    { label: "Mathématiques",   color: "#E74C3C", bg: "#FDEDEC" },
+    { label: "Français",        color: "#1A4F8A", bg: "#E8EEF7" },
+    { label: "Italien",         color: "#F48FB1", bg: "#FDE8F0" },
+    { label: "Espagnol",        color: "#8E44AD", bg: "#F4ECF7" },
+    { label: "Allemand",        color: "#7B2D3E", bg: "#F5E8EB" },
+    { label: "SES",             color: "#D4AC0D", bg: "#FEF9E7" },
+    { label: "SNT",             color: "#E67E22", bg: "#FEF0E6" },
+    { label: "Musique",         color: "#7F8C8D", bg: "#F2F3F3" },
+    { label: "Danse",           color: "#95A5A6", bg: "#F4F6F6" },
+    { label: "Physique-Chimie", color: "#7D5A45", bg: "#F3EAE4" },
+    { label: "SVT",             color: "#1ABC9C", bg: "#E8F8F5" },
+    { label: "EMC",             color: "#2ECC71", bg: "#E9F7EF" },
+    { label: "Autre",           color: "#AAB7B8", bg: "#F2F3F3" },
+  ],
+},
   "Lycée Guy Mollet": {
     emoji: "🏛️",
     couleur: "#E67E22",
