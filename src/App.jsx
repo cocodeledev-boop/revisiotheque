@@ -124,6 +124,15 @@ function SelectionScreen({ onSelect }) {
     }
   };
 
+  const validerClasseMdp = () => {
+  if (mdp === config.motsDePasseClasses?.[classeChoisie]) {
+    setErreur(false);
+    onSelect(etablissement, classeChoisie);
+  } else {
+    setErreur(true);
+    setMdp("");
+  }
+};
   // Étape 1 — choisir l'établissement
   if (etape === 1) {
     return (
