@@ -185,13 +185,25 @@ function SelectionScreen({ onSelect }) {
         <div style={sel.subtitle}>Choisissez votre classe</div>
         <div style={sel.btnGroup}>
           {config.classes.map((classe) => (
-            <button key={classe}
-              style={{ ...sel.classeBtn, background: config.couleur }}
-              onClick={() => onSelect(etablissement, classe)}>
-              🎓 {classe}
-            </button>
-          ))}
-        </div>
+  <button
+    key={classe}
+    style={{
+      ...sel.classeBtn,
+      background: classe === "Seconde 4" ? "#4F7FFF" : "#8E44AD"
+    }}
+    onClick={() => {
+      const mdp = prompt(`Mot de passe pour ${classe} :`);
+
+      if (mdp === config.motsDePasseClasses?.[classe]) {
+        onSelect(etablissement, classe);
+      } else {
+        alert("Mot de passe incorrect");
+      }
+    }}
+  >
+    🎓 {classe}
+  </button>
+))}
         <button style={sel.backBtn} onClick={() => setEtape(1)}>← Changer d'établissement</button>
       </div>
     </div>
