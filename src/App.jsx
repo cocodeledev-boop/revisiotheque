@@ -264,7 +264,6 @@ if (etape === 4) {
     🎓 {classe}
   </button>
 ))}
-       ))}
         </div>
 
         <button style={sel.backBtn} onClick={() => setEtape(1)}>
