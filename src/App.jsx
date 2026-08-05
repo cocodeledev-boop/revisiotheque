@@ -333,12 +333,25 @@ export default function App() {
   };
 
   const handleChangeEtab = () => {
-    localStorage.removeItem("etab");
-    localStorage.removeItem("classe");
-    setEtablissement(null);
-    setClasse(null);
-    setFiches([]);
-  };
+  localStorage.removeItem("etab");
+  localStorage.removeItem("classe");
+  setEtablissement(null);
+  setClasse(null);
+  setFiches([]);
+};
+
+const toggleFavori = (id) => {
+  let nouveauxFavoris;
+
+  if (favoris.includes(id)) {
+    nouveauxFavoris = favoris.filter((f) => f !== id);
+  } else {
+    nouveauxFavoris = [...favoris, id];
+  }
+
+  setFavoris(nouveauxFavoris);
+  localStorage.setItem("favoris", JSON.stringify(nouveauxFavoris));
+};
 
   // ── Charger les fiches de l'établissement + classe ───────────────────────
   useEffect(() => {
