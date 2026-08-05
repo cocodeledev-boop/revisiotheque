@@ -177,6 +177,59 @@ function SelectionScreen({ onSelect }) {
     );
   }
 
+  // Étape 4 — mot de passe de la classe
+if (etape === 4) {
+  return (
+    <div style={sel.root}>
+      <div style={sel.card}>
+        <div style={{ fontSize: 52, marginBottom: 12 }}>🎓</div>
+
+        <div style={sel.title}>{classeChoisie}</div>
+
+        <div style={sel.subtitle}>
+          Entrez le mot de passe de la classe
+        </div>
+
+        <input
+          style={{
+            ...sel.mdpInput,
+            borderColor: erreur ? "#E74C3C" : "#E0E0E0"
+          }}
+          type="password"
+          placeholder="Mot de passe…"
+          value={mdp}
+          onChange={(e) => {
+            setMdp(e.target.value);
+            setErreur(false);
+          }}
+          onKeyDown={(e) => e.key === "Enter" && validerClasseMdp()}
+          autoFocus
+        />
+
+        {erreur && (
+          <div style={sel.erreur}>
+            ❌ Mot de passe incorrect
+          </div>
+        )}
+
+        <button
+          style={{ ...sel.classeBtn, background: config.couleur }}
+          onClick={validerClasseMdp}
+        >
+          Accéder →
+        </button>
+
+        <button
+          style={sel.backBtn}
+          onClick={() => setEtape(3)}
+        >
+          ← Changer de classe
+        </button>
+
+      </div>
+    </div>
+  );
+}
   // Étape 3 — choisir la classe
   return (
     <div style={sel.root}>
@@ -192,15 +245,12 @@ function SelectionScreen({ onSelect }) {
       ...sel.classeBtn,
       background: classe === "Seconde 4" ? "#4F7FFF" : "#8E44AD"
     }}
-    onClick={() => {
-      const mdp = prompt(`Mot de passe pour ${classe} :`);
-
-      if (mdp === config.motsDePasseClasses?.[classe]) {
-        onSelect(etablissement, classe);
-      } else {
-        alert("Mot de passe incorrect");
-      }
-    }}
+  onClick={() => {
+  setClasseChoisie(classe);
+  setMdp("");
+  setErreur(false);
+  setEtape(4);
+}}
   >
     🎓 {classe}
   </button>
