@@ -204,7 +204,12 @@ function SelectionScreen({ onSelect }) {
     🎓 {classe}
   </button>
 ))}
-        <button style={sel.backBtn} onClick={() => setEtape(1)}>← Changer d'établissement</button>
+       ))}
+        </div>
+
+        <button style={sel.backBtn} onClick={() => setEtape(1)}>
+          ← Changer d'établissement
+        </button>
       </div>
     </div>
   );
