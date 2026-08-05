@@ -14,7 +14,7 @@ const ETABLISSEMENTS = {
     emoji: "🏫",
     couleur: "#4F7FFF",
     motDePasse: "59500",
-    classes: ["Seconde 4"],
+    classes: ["S2TMD"],
     matieres: [
       { label: "Anglais",         color: "#5BB8F5", bg: "#EAF6FE" },
       { label: "Histoire-Géo",    color: "#27AE60", bg: "#E9F7EF" },
