@@ -103,6 +103,7 @@ function SelectionScreen({ onSelect }) {
   const [etablissement, setEtablissement] = useState(null);
   const [mdp, setMdp]                 = useState("");
   const [erreur, setErreur]           = useState(false);
+  const [classeChoisie, setClasseChoisie] = useState(null);
 
   const config = etablissement ? ETABLISSEMENTS[etablissement] : null;
 
