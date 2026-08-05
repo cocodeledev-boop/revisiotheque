@@ -42,6 +42,9 @@ const ETABLISSEMENTS = {
     couleur: "#E67E22",
     motDePasse: "62000",
     classes: ["Seconde Iris"],
+    motsDePasseClasses: {
+  "Seconde Iris": "1234",
+},
     matieres: [
       { label: "Anglais",         color: "#5BB8F5", bg: "#EAF6FE" },
       { label: "Histoire-Géo",    color: "#27AE60", bg: "#E9F7EF" },
