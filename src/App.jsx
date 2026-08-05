@@ -708,6 +708,18 @@ const s = {
   avatar:         { width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#FFF", flexShrink: 0 },
   authorName:     { fontSize: 13, fontWeight: 600, color: "#333" },
   deleteBtnDiscret: { position: "absolute", top: 10, right: 10, background: "none", border: "none", cursor: "pointer", fontSize: 14, opacity: 0.25, padding: "4px", borderRadius: 6, lineHeight: 1 },
-  empty:          { textAlign: "center", padding: "80px 20px", color: "#777", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 },
-  footer:         { textAlign: "center", padding: 20, color: "#BBB", fontSize: 12, borderTop: "1px solid #E8E8E8", background: "#FFF" },
+ empty:          { textAlign: "center", padding: "80px 20px", color: "#777", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 },
+footer:         { textAlign: "center", padding: 20, color: "#BBB", fontSize: 12, borderTop: "1px solid #E8E8E8", background: "#FFF" },
+
+favoriteBtn: {
+  position: "absolute",
+  top: 10,
+  left: 10,
+  background: "#FFF",
+  border: "1px solid #DDD",
+  borderRadius: 8,
+  padding: "5px 10px",
+  cursor: "pointer",
+  fontSize: 12,
+},
 };
